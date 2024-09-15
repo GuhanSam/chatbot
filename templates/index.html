@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        h2 {
+            font-size: 24px;
+            color: #ffffff;
+            margin: 0;
+            text-align: center;
+        }
+
+        /* Chat container */
+        #chat-container {
+            width: 400px;
+            max-width: 100%;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+            max-height: 600px;
+            overflow: hidden;
+        }
+
+        /* Chat header */
+        #chat-header {
+            background-color: #007bff;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Chat box styles */
+        #chat-box {
+            flex-grow: 1;
+            padding: 15px;
+            height: 100%;
+            overflow-y: auto;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            width: fit-content;
+            max-width: 70%;
+            word-wrap: break-word;
+            font-size: 15px;
+        }
+
+        .user-message {
+            background-color: #007bff;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .bot-message {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        /* Input area */
+        #input-area {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            flex-shrink: 0;
+        }
+
+        #message-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 25px;
+            margin-right: 10px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s ease-in-out;
+        }
+
+        #message-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        #send-btn, #mic-btn {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #send-btn:hover, #mic-btn:hover {
+            background-color: #0056b3;
+        }
+
+        #mic-btn {
+            background-color: #28a745;
+        }
+
+        #mic-btn:hover {
+            background-color: #218838;
+        }
+
+        /* Scroll behavior */
+        #chat-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #chat-box::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 123, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        #chat-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* Responsive design */
+        @media (max-width: 1024px) {
+            #chat-container {
+                width: 90%;
+                height: 80%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #chat-container {
+                width: 95%;
+                height: 85%;
+            }
+
+            #message-input {
+                font-size: 14px;
+            }
+
+            .message {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #chat-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+
+            #message-input {
+                font-size: 13px;
+                padding: 8px;
+            }
+
+            #send-btn, #mic-btn {
+                font-size: 16px;
+                padding: 8px 12px;
+            }
+
+            .message {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="chat-container">
+    <div id="chat-header">
+        <h2>AI Chatbot</h2>
+    </div>
+    <div id="chat-box"></div>
+    <div id="input-area">
+        <input type="text" id="message-input" placeholder="Type your message..." />
+        <button id="mic-btn">🎤</button>
+        <button id="send-btn">➤</button>
+    </div>
+</div>
+
+<script>
+    // Function to send the user message to the chatbot
+    function sendMessage() {
+        var userMessage = document.getElementById('message-input').value;
+
+        if (userMessage.trim() === "") {
+            alert("Please enter a message.");
+            return;
+        }
+
+        // Display user message in the chat box
+        var chatBox = document.getElementById('chat-box');
+        var userMessageElement = document.createElement('div');
+        userMessageElement.classList.add('message', 'user-message');
+        userMessageElement.innerText = userMessage;
+        chatBox.appendChild(userMessageElement);
+
+        // Scroll chat box to the bottom
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Send user message to the Flask API
+        fetch('/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: userMessage })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Display bot response in the chat box
+            var botMessageElement = document.createElement('div');
+            botMessageElement.classList.add('message', 'bot-message');
+            botMessageElement.innerText = data.response;
+            chatBox.appendChild(botMessageElement);
+
+            // Scroll chat box to the bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+
+        // Clear the input field
+        document.getElementById('message-input').value = '';
+    }
+
+    // Send message when Enter key is pressed
+    document.getElementById('message-input').addEventListener('keydown', function(event) {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    });
+
+    // Send message when Send button is clicked
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+
+    // Voice recognition using Web Speech API
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    // Voice button click event
+    document.getElementById('mic-btn').addEventListener('click', function() {
+        recognition.start();
+    });
+
+    // Handle voice recognition result
+    recognition.onresult = function(event) {
+        var transcript = event.results[0][0].transcript;
+        document.getElementById('message-input').value = transcript;
+        sendMessage();
+    };
+
+    recognition.onerror = function(event) {
+        console.error('Error occurred in recognition:', event.error);
+    };
+</script>
+
+</body>
+</html>
